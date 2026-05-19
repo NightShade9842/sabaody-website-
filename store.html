@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Store | SABAODY BOT</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/store.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">⚓ SABAODY BOT</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="profile.html">Profile</a></li>
+            <li><a href="cards.html">Cards</a></li>
+            <li><a href="store.html" class="active">Store</a></li>
+            <li><a href="leaderboard.html">Leaderboard</a></li>
+        </ul>
+    </nav>
+
+    <main class="store-container">
+        <div class="store-header">
+            <h2>🏪 SABAODY Store</h2>
+            <div class="currency-display" id="currencyDisplay">
+                <span class="beli-display">💰 <span id="userBeli">0</span>฿</span>
+                <span class="gems-display">💎 <span id="userGems">0</span> Gems</span>
+                <span class="coins-display">🪙 <span id="userCoins">0</span> Coins</span>
+            </div>
+        </div>
+
+        <div class="store-tabs">
+            <button class="tab-btn active" onclick="showStoreTab('items')">🎁 Items</button>
+            <button class="tab-btn" onclick="showStoreTab('packs')">📦 Card Packs</button>
+            <button class="tab-btn" onclick="showStoreTab('cardshop')">🃏 Card Shop</button>
+            <button class="tab-btn" onclick="showStoreTab('events')">🎪 Event Store</button>
+        </div>
+
+        <div class="store-content" id="itemsTab">
+            <h3>Items & Power-ups</h3>
+            <div class="store-grid" id="itemsGrid"></div>
+        </div>
+
+        <div class="store-content" id="packsTab" style="display:none;">
+            <h3>Card Packs</h3>
+            <div class="store-grid" id="packsGrid"></div>
+        </div>
+
+        <div class="store-content" id="cardshopTab" style="display:none;">
+            <h3>Player Card Listings</h3>
+            <div class="filters">
+                <input type="text" id="cardSearch" placeholder="Search cards..." onkeyup="filterCardShop()">
+                <select id="cardRarityFilter" onchange="filterCardShop()">
+                    <option value="">All Rarities</option>
+                    <option value="Common">Common</option>
+                    <option value="Rare">Rare</option>
+                    <option value="Epic">Epic</option>
+                    <option value="Legendary">Legendary</option>
+                </select>
+            </div>
+            <div class="store-grid" id="cardshopGrid"></div>
+        </div>
+
+        <div class="store-content" id="eventsTab" style="display:none;">
+            <h3>🎪 Event Items</h3>
+            <div class="store-grid" id="eventsGrid"></div>
+        </div>
+    </main>
+
+    <script src="js/store.js"></script>
+</body>
+</html>
