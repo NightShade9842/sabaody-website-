@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard | SABAODY BOT</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/leaderboard.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">⚓ SABAODY BOT</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="profile.html">Profile</a></li>
+            <li><a href="cards.html">Cards</a></li>
+            <li><a href="store.html">Store</a></li>
+            <li><a href="leaderboard.html" class="active">Leaderboard</a></li>
+        </ul>
+    </nav>
+
+    <main class="leaderboard-container">
+        <h2>🏆 Grand Line Rankings</h2>
+        
+        <div class="leaderboard-tabs">
+            <button class="tab-btn active" onclick="showLB('level')">⭐ Levels</button>
+            <button class="tab-btn" onclick="showLB('richest')">💰 Richest</button>
+            <button class="tab-btn" onclick="showLB('legendary')">🃏 Legendary Cards</button>
+            <button class="tab-btn" onclick="showLB('guild')">⚔️ Guilds</button>
+            <button class="tab-btn" onclick="showLB('casino')">🎰 Casino</button>
+        </div>
+
+        <div class="leaderboard-content" id="levelLB">
+            <h3>Top Pirates by Level</h3>
+            <div class="top-3" id="levelTop3"></div>
+            <table class="rankings-table" id="levelTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Pirate</th>
+                        <th>Level</th>
+                        <th>XP</th>
+                        <th>Cards</th>
+                    </tr>
+                </thead>
+                <tbody id="levelTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="leaderboard-content" id="richestLB" style="display:none;">
+            <h3>Top Pirates by Wealth</h3>
+            <div class="top-3" id="richestTop3"></div>
+            <table class="rankings-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Pirate</th>
+                        <th>Beli</th>
+                        <th>Gems</th>
+                        <th>Total Value</th>
+                    </tr>
+                </thead>
+                <tbody id="richestTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="leaderboard-content" id="legendaryLB" style="display:none;">
+            <h3>Most Legendary Cards</h3>
+            <div class="top-3" id="legendaryTop3"></div>
+            <table class="rankings-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Pirate</th>
+                        <th>Legendary Cards</th>
+                        <th>Mythic Cards</th>
+                        <th>Total Collection</th>
+                    </tr>
+                </thead>
+                <tbody id="legendaryTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="leaderboard-content" id="guildLB" style="display:none;">
+            <h3>Top Guilds</h3>
+            <table class="rankings-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Guild</th>
+                        <th>Members</th>
+                        <th>Treasury</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody id="guildTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="leaderboard-content" id="casinoLB" style="display:none;">
+            <h3>Casino High Rollers</h3>
+            <table class="rankings-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Games Played</th>
+                        <th>Total Won</th>
+                        <th>Biggest Win</th>
+                    </tr>
+                </thead>
+                <tbody id="casinoTableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="js/leaderboard.js"></script>
+</body>
+</html>
