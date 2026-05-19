@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Database | SABAODY BOT</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/cards.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">⚓ SABAODY BOT</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="profile.html">Profile</a></li>
+            <li><a href="cards.html" class="active">Cards</a></li>
+            <li><a href="store.html">Store</a></li>
+            <li><a href="leaderboard.html">Leaderboard</a></li>
+        </ul>
+    </nav>
+
+    <main class="cards-browser">
+        <div class="filters">
+            <h2>🃏 Card Database</h2>
+            <div class="filter-controls">
+                <select id="rarityFilter" onchange="filterCards()">
+                    <option value="">All Rarities</option>
+                    <option value="Common">Common</option>
+                    <option value="Uncommon">Uncommon</option>
+                    <option value="Rare">Rare</option>
+                    <option value="Epic">Epic</option>
+                    <option value="Legendary">Legendary</option>
+                    <option value="Mythic">Mythic</option>
+                </select>
+                
+                <select id="sourceFilter" onchange="filterCards()">
+                    <option value="">All Sources</option>
+                    <option value="mazoku">Mazoku</option>
+                    <option value="shoob">Shoob</option>
+                    <option value="karuta">Karuta</option>
+                </select>
+                
+                <select id="sortBy" onchange="filterCards()">
+                    <option value="name">Sort by Name</option>
+                    <option value="rarity">Sort by Rarity</option>
+                    <option value="attack">Sort by Attack</option>
+                    <option value="defense">Sort by Defense</option>
+                </select>
+                
+                <input type="text" id="searchInput" placeholder="Search cards..." onkeyup="filterCards()">
+            </div>
+        </div>
+        
+        <div class="cards-container" id="cardsContainer">
+            <!-- Dynamically loaded -->
+        </div>
+        
+        <div class="pagination" id="pagination">
+            <!-- Page controls -->
+        </div>
+    </main>
+
+    <script src="js/cards.js"></script>
+</body>
+</html>
