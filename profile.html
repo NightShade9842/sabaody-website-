@@ -5,10 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pirate Profile | SABAODY BOT</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* fallback if style.css missing */
+        :root {
+            --bg: #0a0e14; --surface: #141b22; --surface2: #1c2530;
+            --gold: #f0b90b; --text: #e6edf3; --text2: #8b949e;
+            --danger: #da3633; --border: #252d38;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin:0; }
+        nav { background: var(--surface); border-bottom:2px solid var(--gold); padding:1rem 2rem; display:flex; justify-content:space-between; }
+        nav .logo { font-size:1.4rem; color:var(--gold); font-weight:bold; }
+        nav ul { list-style:none; display:flex; gap:1.5rem; }
+        nav a { color:var(--text); text-decoration:none; }
+        .container { max-width:1400px; margin:0 auto; padding:2rem; }
+        .search-box { width:100%; padding:0.8rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); margin-bottom:1.5rem; }
+        .btn { padding:0.8rem 2rem; background:var(--gold); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+        .profile-header { display:flex; gap:2rem; align-items:center; background:var(--surface); padding:2rem; border-radius:10px; }
+        .avatar { width:100px; height:100px; border-radius:50%; border:3px solid var(--gold); }
+        .stats-row { display:flex; gap:1.5rem; flex-wrap:wrap; }
+        .stat-box { background:var(--surface2); padding:1rem; border-radius:8px; text-align:center; min-width:80px; }
+        .stat-value { font-size:1.8rem; color:var(--gold); font-weight:bold; }
+        .tabs { display:flex; gap:0.5rem; margin:2rem 0; }
+        .tab-btn { padding:0.7rem 1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); cursor:pointer; }
+        .tab-btn.active { background:var(--gold); color:#000; font-weight:bold; }
+        .card-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; }
+        .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+        .card img { width:100%; height:200px; object-fit:cover; }
+        .card-body { padding:0.8rem; }
+        .card-title { font-weight:bold; }
+        .card-rarity { display:inline-block; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.75rem; margin:0.3rem 0; }
+        .rarity-t1 { background:#4a3728; color:#d4a574; }
+        .rarity-t2 { background:#2d3a2d; color:#8fbc8f; }
+        .rarity-t3 { background:#1e3a3d; color:#7fdbda; }
+        .rarity-t4 { background:#1c2541; color:#7ba3f5; }
+        .rarity-t5 { background:#2a1f3d; color:#c084fc; }
+        .rarity-t6 { background:#3d2a1f; color:#fbbf24; }
+        .rarity-tx { background:#3d1f1f; color:#f87171; }
+        .pokemon-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem; text-align:center; }
+        .pokemon-card img { width:100px; height:100px; }
+    </style>
 </head>
 <body>
     <nav>
-        <div class="logo">⚓ SABAODY BOT<span>Grand Fleet</span></div>
+        <div class="logo">⚓ SABAODY BOT</div>
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/profile.html" class="active">Profile</a></li>
@@ -21,15 +60,152 @@
 
     <div class="container">
         <div style="max-width:600px; margin:0 auto;">
-            <input type="text" class="search-box" id="userIdInput" placeholder="Enter WhatsApp number (e.g., 233560806367) to login/view profile">
-            <button class="btn" onclick="loadProfile()" style="margin-bottom:1.5rem;">🔍 View Profile</button>
+            <input type="text" class="search-box" id="userIdInput" placeholder="Enter WhatsApp number (e.g., 233560806367)">
+            <button class="btn" onclick="loadProfile()">🔍 View Profile</button>
         </div>
-        <div id="profileContent">
-            <p style="color: var(--text2); text-align:center;">Enter your WhatsApp number above to see your profile.</p>
+        <div id="profileContent" style="margin-top:2rem;">
+            <p style="color:var(--text2); text-align:center;">Enter your WhatsApp number to see your profile.</p>
         </div>
     </div>
 
-    <script src="js/main.js"></script>
-    <script src="js/profile.js"></script>
+    <script>
+        const API = '/api';
+
+        function formatNumber(n) {
+            if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+            if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            return n?.toLocaleString() || '0';
+        }
+
+        function getUserId(raw) {
+            let id = raw.trim();
+            if (!id) return null;
+            if (!id.includes('@')) id += '@s.whatsapp.net';
+            return id;
+        }
+
+        function saveUserId(userId) {
+            localStorage.setItem('sabaody_user', userId);
+        }
+
+        function getSavedUserId() {
+            return localStorage.getItem('sabaody_user') || '';
+        }
+
+        // Auto-load if saved
+        window.onload = function() {
+            const savedId = getSavedUserId();
+            if (savedId) {
+                document.getElementById('userIdInput').value = savedId.replace('@s.whatsapp.net', '');
+                loadProfile();
+            }
+        };
+
+        async function loadProfile() {
+            const raw = document.getElementById('userIdInput').value;
+            const userId = getUserId(raw);
+            if (!userId) return alert('Enter a valid WhatsApp number');
+            saveUserId(userId);
+
+            const content = document.getElementById('profileContent');
+            content.innerHTML = '<div style="text-align:center;padding:2rem;">Loading...</div>';
+
+            try {
+                const [profile, cards, pokemon, inventory, guild] = await Promise.all([
+                    fetch(`${API}/profile?id=${encodeURIComponent(userId)}`).then(r => r.json()),
+                    fetch(`${API}/cards?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
+                    fetch(`${API}/pokemon?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
+                    fetch(`${API}/inventory?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
+                    fetch(`${API}/guild?user=${encodeURIComponent(userId)}`).then(r => r.json())
+                ]);
+
+                if (profile.error) {
+                    return content.innerHTML = `<p style="color:var(--danger); text-align:center;">${profile.error}</p>`;
+                }
+
+                const decks = { 1: [], 2: [], 3: [], collection: [] };
+                cards.forEach(c => {
+                    if (c.deck_number) decks[c.deck_number]?.push(c);
+                    else decks.collection.push(c);
+                });
+
+                content.innerHTML = `
+                    <div class="profile-header">
+                        <img src="${profile.profile_pic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.pirate_name || 'Pirate')}&size=200&background=141b22&color=f0b90b`}" 
+                             class="avatar" 
+                             onerror="this.src='https://ui-avatars.com/api/?name=Pirate&size=200&background=141b22&color=f0b90b'">
+                        <div>
+                            <h1>${profile.pirate_name || 'Unknown Pirate'}</h1>
+                            <div class="stats-row">
+                                <div class="stat-box"><div class="stat-value">${profile.level || 1}</div><div class="stat-label">Level</div></div>
+                                <div class="stat-box"><div class="stat-value">${formatNumber(profile.beli)}</div><div class="stat-label">Beli</div></div>
+                                <div class="stat-box"><div class="stat-value">${profile.gems || 0}</div><div class="stat-label">Gems</div></div>
+                                <div class="stat-box"><div class="stat-value">${profile.dust || 0}</div><div class="stat-label">Dust</div></div>
+                                <div class="stat-box"><div class="stat-value">${cards.length}</div><div class="stat-label">Cards</div></div>
+                                <div class="stat-box"><div class="stat-value">${pokemon.length}</div><div class="stat-label">Pokémon</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    ${guild?.name ? `
+                        <div class="stats-row" style="margin-bottom:2rem;">
+                            <div class="stat-box"><div class="stat-value">${guild.name}</div><div class="stat-label">Guild</div></div>
+                            <div class="stat-box"><div class="stat-value">${guild.guild_role || 'Member'}</div><div class="stat-label">Role</div></div>
+                            <div class="stat-box"><div class="stat-value">${formatNumber(guild.treasury)}</div><div class="stat-label">Treasury</div></div>
+                        </div>
+                    ` : ''}
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="showTab('deck1')">🃏 Deck 1 (${decks[1].length})</button>
+                        <button class="tab-btn" onclick="showTab('deck2')">🃏 Deck 2 (${decks[2].length})</button>
+                        <button class="tab-btn" onclick="showTab('deck3')">⭐ Deck 3 (${decks[3].length})</button>
+                        <button class="tab-btn" onclick="showTab('collection')">📦 Collection (${decks.collection.length})</button>
+                        <button class="tab-btn" onclick="showTab('pokemon')">🐾 Pokémon (${pokemon.length})</button>
+                        <button class="tab-btn" onclick="showTab('inventory')">🎒 Inventory (${inventory.length})</button>
+                    </div>
+                    <div id="deck1" class="tab-content"><div class="card-grid">${decks[1].map(renderCard).join('') || '<p>No cards</p>'}</div></div>
+                    <div id="deck2" class="tab-content" style="display:none;"><div class="card-grid">${decks[2].map(renderCard).join('') || '<p>No cards</p>'}</div></div>
+                    <div id="deck3" class="tab-content" style="display:none;"><div class="card-grid">${decks[3].map(renderCard).join('') || '<p>No cards</p>'}</div></div>
+                    <div id="collection" class="tab-content" style="display:none;"><div class="card-grid">${decks.collection.map(renderCard).join('') || '<p>Collection empty</p>'}</div></div>
+                    <div id="pokemon" class="tab-content" style="display:none;"><div class="card-grid">${pokemon.map(renderPoke).join('') || '<p>No Pokémon</p>'}</div></div>
+                    <div id="inventory" class="tab-content" style="display:none;">
+                        ${inventory.length ? inventory.map(i => `<div style="background:var(--surface);padding:1rem;border-radius:8px;margin-bottom:0.5rem;">${i.item_name} x${i.quantity}</div>`).join('') : '<p>Empty</p>'}
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = `<p style="color:var(--danger); text-align:center;">Error: ${e.message}</p>`;
+            }
+        }
+
+        function renderCard(c) {
+            return `<div class="card">
+                <img src="${c.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.card_name)}&size=256&background=141b22&color=f0b90b`}" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${c.card_name}') + '&size=256&background=141b22&color=f0b90b'">
+                <div class="card-body">
+                    <div class="card-title">${c.card_name}</div>
+                    <span class="card-rarity rarity-t${c.rarity?.replace('t','')}">${c.rarity?.toUpperCase()}</span>
+                    <div style="font-size:0.8rem;color:var(--text2);">⚔️ ${c.attack} 🛡️ ${c.defense}</div>
+                </div>
+            </div>`;
+        }
+
+        function renderPoke(p) {
+            const dex = { Pikachu:25, Charmander:4, Squirtle:7, Bulbasaur:1, Eevee:133, Gyarados:130, Mewtwo:150, Mew:151 };
+            const id = dex[p.pokemon_name] || 1;
+            return `<div class="pokemon-card">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${p.pokemon_name}') + '&size=120&background=141b22&color=f0b90b'">
+                <div class="pokemon-name">${p.pokemon_name}</div>
+                <div style="color:var(--gold);">Lv. ${p.level} | ❤️ ${p.hp}/${p.max_hp}</div>
+            </div>`;
+        }
+
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const tab = document.getElementById(id);
+            if (tab) tab.style.display = 'block';
+            event.target.classList.add('active');
+        }
+    </script>
 </body>
 </html>
