@@ -1,8 +1,7 @@
 {
   "name": "sabaody-website",
   "version": "1.0.0",
-  "description": "SABAODY BOT public website – profiles, card database, marketplace, store, leaderboards.",
-  "private": false,
+  "private": true,
   "dependencies": {
     "mysql2": "^3.11.0"
   }
