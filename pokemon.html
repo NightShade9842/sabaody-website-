@@ -4,65 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokémon | SABAODY BOT</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* slideshow */
-        .slideshow-container {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 2rem;
-        }
-        .slideshow-track {
-            display: flex;
-            transition: transform 0.5s ease-in-out;
-        }
-        .slide-card {
-            min-width: 200px;
-            margin: 0 0.5rem;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .slide-card img {
-            width: 120px;
-            height: 120px;
-            object-fit: contain;
-        }
-        .slide-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--gold);
-            color: #000;
-            border: none;
-            font-size: 2rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 2;
-        }
-        .slide-nav.left { left: 10px; }
-        .slide-nav.right { right: 10px; }
-        .pokemon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .pokemon-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .pokemon-card img {
-            width: 100px;
-            height: 100px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <nav>
@@ -78,7 +20,7 @@
     </nav>
 
     <div class="container">
-        <h2 style="color: var(--gold); margin-bottom: 1rem;">🐾 Grand Line Pokémon</h2>
+        <h2 style="color:var(--gold);">🐾 Grand Line Pokémon</h2>
         <input type="text" class="search-box" id="pokeSearch" placeholder="Search by name or owner..." onkeyup="filterPokemon()">
         <div class="filters">
             <select id="rarityFilter" onchange="filterPokemon()">
@@ -99,84 +41,10 @@
         </div>
 
         <!-- Grid -->
-        <div class="pokemon-grid" id="pokemonGrid"></div>
+        <div class="pokemon-grid" id="pokemonGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:1rem;"></div>
     </div>
 
-    <script>
-        let allPokemon = [];
-        let currentSlide = 0;
-        const visibleSlides = 4; // how many slides visible
-
-        async function loadPokemon() {
-            try {
-                const res = await fetch('/api/pokemon-all');
-                allPokemon = await res.json();
-                renderSlideshow(allPokemon.slice(0, 20)); // show first 20 in slideshow
-                filterPokemon();
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function renderSlideshow(pokemonList) {
-            const track = document.getElementById('slideshowTrack');
-            track.innerHTML = pokemonList.map(p => `
-                <div class="slide-card">
-                    <img src="${getSpriteUrl(p.pokemon_name)}" 
-                         onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${p.pokemon_name}') + '&size=120&background=141b22&color=f0b90b'">
-                    <div style="font-weight:bold;">${p.pokemon_name}</div>
-                    <div style="color:var(--gold);">Lv.${p.level} | ${p.rarity}</div>
-                    <div style="font-size:0.8rem; color:var(--text2);">Owner: ${p.owner_name || 'Wild'}</div>
-                </div>
-            `).join('');
-            currentSlide = 0;
-            updateSlidePosition();
-        }
-
-        function moveSlide(dir) {
-            const maxSlides = Math.ceil(allPokemon.slice(0,20).length / visibleSlides);
-            currentSlide = Math.min(Math.max(currentSlide + dir, 0), maxSlides - 1);
-            updateSlidePosition();
-        }
-
-        function updateSlidePosition() {
-            const track = document.getElementById('slideshowTrack');
-            const cardWidth = 200 + 16; // min-width + margin
-            track.style.transform = `translateX(-${currentSlide * visibleSlides * cardWidth}px)`;
-        }
-
-        function getSpriteUrl(name) {
-            const dex = {Pikachu:25,Charmander:4,Squirtle:7,Bulbasaur:1,Eevee:133,Gyarados:130,Mewtwo:150,Mew:151};
-            const id = dex[name] || 1;
-            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
-        }
-
-        function filterPokemon() {
-            const search = document.getElementById('pokeSearch').value.toLowerCase();
-            const rarity = document.getElementById('rarityFilter').value;
-            let filtered = allPokemon.filter(p => 
-                (p.pokemon_name.toLowerCase().includes(search) || 
-                 (p.owner_name && p.owner_name.toLowerCase().includes(search))) &&
-                (!rarity || p.rarity === rarity)
-            );
-            renderGrid(filtered);
-        }
-
-        function renderGrid(list) {
-            const grid = document.getElementById('pokemonGrid');
-            grid.innerHTML = list.map(p => `
-                <div class="pokemon-card">
-                    <img src="${getSpriteUrl(p.pokemon_name)}" 
-                         onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${p.pokemon_name}') + '&size=120&background=141b22&color=f0b90b'">
-                    <div style="font-weight:bold;">${p.pokemon_name}</div>
-                    <div style="color:var(--gold);">Lv.${p.level} | ${p.rarity}</div>
-                    <div style="font-size:0.8rem; color:var(--text2);">Owner: ${p.owner_name || 'Wild'}</div>
-                </div>
-            `).join('');
-        }
-
-        // Initial load
-        loadPokemon();
-    </script>
+    <script src="js/main.js"></script>
+    <script src="js/pokemon.js"></script>
 </body>
 </html>
