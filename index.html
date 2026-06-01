@@ -3,82 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SABAODY BOT – Grand Line Hub</title>
+    <title>SABAODY BOT – Login</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .login-box h1 {
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        .login-box p {
+            color: var(--text2);
+            margin-bottom: 2rem;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .login-box .btn {
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <nav>
-        <div class="logo">⚓ SABAODY BOT<span>Grand Fleet</span></div>
-        <ul>
-            <li><a href="/" class="active">Home</a></li>
-            <li><a href="/profile.html">Profile</a></li>
-            <li><a href="/cards.html">Cards</a></li>
-            <li><a href="/marketplace.html">Market</a></li>
-            <li><a href="/store.html">Store</a></li>
-            <li><a href="/leaderboard.html">Leaderboard</a></li>
-        </ul>
-    </nav>
-
-    <div class="container">
-        <div class="hero">
-            <h1>⚓ Welcome to the Grand Line</h1>
-            <p>Manage your pirate profile, collect anime cards, catch Pokémon, trade with other pirates, and climb the leaderboards!</p>
-            <a href="/profile.html" class="btn">🚀 Explore Your Profile</a>
-            <a href="/cards.html" class="btn btn-secondary" style="margin-left:1rem;">🃏 Browse Cards</a>
-        </div>
-
-        <div class="stats-row" style="margin-bottom:2rem;">
-            <div class="stat-box"><div class="stat-value" id="totalPlayers">--</div><div class="stat-label">Pirates Registered</div></div>
-            <div class="stat-box"><div class="stat-value" id="totalCards">--</div><div class="stat-label">Cards Collected</div></div>
-            <div class="stat-box"><div class="stat-value" id="totalPokemon">--</div><div class="stat-label">Pokémon Caught</div></div>
-            <div class="stat-box"><div class="stat-value" id="totalGuilds">--</div><div class="stat-label">Active Guilds</div></div>
-        </div>
-
-        <h2 style="color: var(--gold); margin-bottom:1rem;">🔥 Recent Cards</h2>
-        <div class="card-grid" id="recentCards">
-            <div class="loading"><div class="spinner"></div>Loading cards...</div>
-        </div>
+    <div class="login-box">
+        <h1>⚓ SABAODY BOT</h1>
+        <p>Enter your WhatsApp number to continue</p>
+        <input type="text" id="phoneInput" placeholder="e.g. 233560806367">
+        <button class="btn" onclick="login()">🚀 Enter Grand Line</button>
+        <div id="errorMsg" style="margin-top:1rem; color:var(--danger);"></div>
     </div>
 
-    <footer>
-        <p>🏴‍☠️ <strong>SABAODY BOT</strong> – Powered by <a href="https://vercel.com">Vercel</a> & MySQL</p>
-        <p>Created by <strong>Gol D. Shade</strong></p>
-    </footer>
-
-    <script src="js/main.js"></script>
     <script>
-        async function loadHome() {
-            const [players, cards, pokemon, guilds, recent] = await Promise.all([
-                fetch('/api/stats?type=players').then(r => r.json()),
-                fetch('/api/stats?type=cards').then(r => r.json()),
-                fetch('/api/stats?type=pokemon').then(r => r.json()),
-                fetch('/api/stats?type=guilds').then(r => r.json()),
-                fetch('/api/cards?limit=8').then(r => r.json())
-            ]);
-            document.getElementById('totalPlayers').textContent = players.count || 0;
-            document.getElementById('totalCards').textContent = cards.count || 0;
-            document.getElementById('totalPokemon').textContent = pokemon.count || 0;
-            document.getElementById('totalGuilds').textContent = guilds.count || 0;
+        function getUserId(raw) {
+            let id = raw.trim();
+            if (!id) return null;
+            if (!id.includes('@')) id += '@s.whatsapp.net';
+            return id;
+        }
 
-            const grid = document.getElementById('recentCards');
-            if (recent.length) {
-                grid.innerHTML = recent.map(c => `
-                    <div class="card">
-                        <img src="${c.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.card_name)}&size=256&background=141b22&color=f0b90b`}" 
-                             alt="${c.card_name}"
-                             onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${c.card_name}') + '&size=256&background=141b22&color=f0b90b'">
-                        <div class="card-body">
-                            <div class="card-title">${c.card_name}</div>
-                            <span class="card-rarity rarity-t${c.rarity?.replace('t','')}">${c.rarity?.toUpperCase()}</span>
-                            <div class="card-stats"><span>⚔️ ${c.attack}</span><span>🛡️ ${c.defense}</span></div>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                grid.innerHTML = '<p style="text-align:center;color:var(--text2);">No cards yet – start collecting!</p>';
+        async function login() {
+            const raw = document.getElementById('phoneInput').value;
+            const userId = getUserId(raw);
+            if (!userId) {
+                document.getElementById('errorMsg').textContent = 'Please enter a valid WhatsApp number.';
+                return;
+            }
+
+            // Check if user exists
+            try {
+                const res = await fetch(`/api/profile?id=${encodeURIComponent(userId)}`);
+                const data = await res.json();
+                if (res.status === 404 || data.error) {
+                    document.getElementById('errorMsg').textContent = 'Number not registered. Use the bot to register first (.register <name>)';
+                    return;
+                }
+                // Save to localStorage and redirect
+                localStorage.setItem('sabaody_user', userId);
+                window.location.href = '/profile.html';
+            } catch (e) {
+                document.getElementById('errorMsg').textContent = 'Connection error. Try again.';
             }
         }
-        loadHome();
     </script>
 </body>
 </html>
