@@ -116,7 +116,6 @@
                 const profile = await res.json();
 
                 if (res.status === 404 || profile.error) {
-                    // User not found – show registration form
                     content.innerHTML = '';
                     document.getElementById('registerSection').innerHTML = `
                         <div class="register-form">
@@ -130,17 +129,27 @@
                     return;
                 }
 
-                // User exists – load full profile
                 document.getElementById('registerSection').innerHTML = '';
-                const [cards, pokemon, inventory, guild] = await Promise.all([
-                    fetch(`${API}/cards?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
-                    fetch(`${API}/pokemon?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
-                    fetch(`${API}/inventory?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
-                    fetch(`${API}/guild?user=${encodeURIComponent(userId)}`).then(r => r.json())
+
+                const [cardsRes, pokemonRes, inventoryRes, guildRes] = await Promise.all([
+                    fetch(`${API}/cards?owner=${encodeURIComponent(userId)}`),
+                    fetch(`${API}/pokemon?owner=${encodeURIComponent(userId)}`),
+                    fetch(`${API}/inventory?owner=${encodeURIComponent(userId)}`),
+                    fetch(`${API}/guild?user=${encodeURIComponent(userId)}`)
                 ]);
 
+                const cards = await cardsRes.json();
+                const pokemon = await pokemonRes.json();
+                const inventory = await inventoryRes.json();
+                const guild = await guildRes.json();
+
+                // Ensure arrays (in case API returns non-array)
+                const safeCards = Array.isArray(cards) ? cards : [];
+                const safePokemon = Array.isArray(pokemon) ? pokemon : [];
+                const safeInventory = Array.isArray(inventory) ? inventory : [];
+
                 const decks = { 1: [], 2: [], 3: [], collection: [] };
-                cards.forEach(c => {
+                safeCards.forEach(c => {
                     if (c.deck_number) decks[c.deck_number]?.push(c);
                     else decks.collection.push(c);
                 });
@@ -157,12 +166,12 @@
                                 <div class="stat-box"><div class="stat-value">${formatNumber(profile.beli)}</div><div class="stat-label">Beli</div></div>
                                 <div class="stat-box"><div class="stat-value">${profile.gems || 0}</div><div class="stat-label">Gems</div></div>
                                 <div class="stat-box"><div class="stat-value">${profile.dust || 0}</div><div class="stat-label">Dust</div></div>
-                                <div class="stat-box"><div class="stat-value">${cards.length}</div><div class="stat-label">Cards</div></div>
-                                <div class="stat-box"><div class="stat-value">${pokemon.length}</div><div class="stat-label">Pokémon</div></div>
+                                <div class="stat-box"><div class="stat-value">${safeCards.length}</div><div class="stat-label">Cards</div></div>
+                                <div class="stat-box"><div class="stat-value">${safePokemon.length}</div><div class="stat-label">Pokémon</div></div>
                             </div>
                         </div>
                     </div>
-                    ${guild?.name ? `
+                    ${guild && guild.name ? `
                         <div class="stats-row" style="margin-bottom:2rem;">
                             <div class="stat-box"><div class="stat-value">${guild.name}</div><div class="stat-label">Guild</div></div>
                             <div class="stat-box"><div class="stat-value">${guild.guild_role || 'Member'}</div><div class="stat-label">Role</div></div>
@@ -174,16 +183,16 @@
                         <button class="tab-btn" onclick="showTab('deck2')">🃏 Deck 2 (${decks[2].length})</button>
                         <button class="tab-btn" onclick="showTab('deck3')">⭐ Deck 3 (${decks[3].length})</button>
                         <button class="tab-btn" onclick="showTab('collection')">📦 Collection (${decks.collection.length})</button>
-                        <button class="tab-btn" onclick="showTab('pokemon')">🐾 Pokémon (${pokemon.length})</button>
-                        <button class="tab-btn" onclick="showTab('inventory')">🎒 Inventory (${inventory.length})</button>
+                        <button class="tab-btn" onclick="showTab('pokemon')">🐾 Pokémon (${safePokemon.length})</button>
+                        <button class="tab-btn" onclick="showTab('inventory')">🎒 Inventory (${safeInventory.length})</button>
                     </div>
                     <div id="deck1" class="tab-content"><div class="card-grid">${decks[1].map(renderCard).join('') || '<p>No cards</p>'}</div></div>
                     <div id="deck2" class="tab-content" style="display:none;"><div class="card-grid">${decks[2].map(renderCard).join('') || '<p>No cards</p>'}</div></div>
                     <div id="deck3" class="tab-content" style="display:none;"><div class="card-grid">${decks[3].map(renderCard).join('') || '<p>No cards</p>'}</div></div>
                     <div id="collection" class="tab-content" style="display:none;"><div class="card-grid">${decks.collection.map(renderCard).join('') || '<p>Collection empty</p>'}</div></div>
-                    <div id="pokemon" class="tab-content" style="display:none;"><div class="card-grid">${pokemon.map(renderPoke).join('') || '<p>No Pokémon</p>'}</div></div>
+                    <div id="pokemon" class="tab-content" style="display:none;"><div class="card-grid">${safePokemon.map(renderPoke).join('') || '<p>No Pokémon</p>'}</div></div>
                     <div id="inventory" class="tab-content" style="display:none;">
-                        ${inventory.length ? inventory.map(i => `<div style="background:var(--surface);padding:1rem;border-radius:8px;margin-bottom:0.5rem;">${i.item_name} x${i.quantity}</div>`).join('') : '<p>Empty</p>'}
+                        ${safeInventory.length ? safeInventory.map(i => `<div style="background:var(--surface);padding:1rem;border-radius:8px;margin-bottom:0.5rem;">${i.item_name} x${i.quantity}</div>`).join('') : '<p>Empty</p>'}
                     </div>
                 `;
             } catch (e) {
@@ -211,7 +220,6 @@
                 const data = await res.json();
                 if (data.success) {
                     msg.innerHTML = '<span style="color:var(--gold);">✅ Registration successful! Loading profile...</span>';
-                    // Reload profile after a short delay
                     setTimeout(loadProfile, 1500);
                 } else {
                     msg.innerHTML = `<span style="color:var(--danger);">${data.message || data.error}</span>`;
