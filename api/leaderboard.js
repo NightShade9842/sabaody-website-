@@ -1,3 +1,4 @@
+// api/leaderboard.js
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
@@ -13,14 +14,14 @@ const pool = mysql.createPool({
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     const { type } = req.query;
-    let query = '';
 
+    let query = '';
     switch (type) {
         case 'level':
             query = 'SELECT user_id, pirate_name, level, xp FROM players ORDER BY level DESC, xp DESC LIMIT 20';
             break;
         case 'richest':
-            query = 'SELECT user_id, pirate_name, beli, bank, (beli+bank) AS total FROM players ORDER BY total DESC LIMIT 20';
+            query = 'SELECT user_id, pirate_name, beli, bank, (beli + bank) AS total FROM players ORDER BY total DESC LIMIT 20';
             break;
         case 'legendary':
             query = `SELECT p.user_id, p.pirate_name, COUNT(c.id) AS count
@@ -42,7 +43,8 @@ module.exports = async (req, res) => {
         const [rows] = await pool.execute(query);
         return res.json(rows);
     } catch (err) {
-        console.error('Leaderboard API error:', err);
-        return res.json([]);
+        // Send the real error back so we can debug
+        console.error('Leaderboard error:', err);
+        return res.status(500).json({ error: 'Database error', message: err.message, code: err.code });
     }
 };
