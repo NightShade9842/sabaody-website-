@@ -1,3 +1,4 @@
+// js/main.js
 const API = '/api';
 
 function formatNumber(n) {
@@ -10,22 +11,18 @@ function formatNumber(n) {
 function getUserId(raw) {
     let id = raw.trim();
     if (!id) return null;
+    // If user typed a plain number, convert to @s.whatsapp.net
     if (!id.includes('@')) id += '@s.whatsapp.net';
     return id;
 }
 
 function saveUserId(userId) {
+    // userId is the actual JID from the database (e.g., 167345498677459@lid)
     localStorage.setItem('sabaody_user', userId);
 }
 
 function getSavedUserId() {
     return localStorage.getItem('sabaody_user') || '';
-}
-
-function redirectToLogin() {
-    if (!getSavedUserId()) {
-        window.location.href = '/index.html';
-    }
 }
 
 function getAvatarUrl(name, size) {
