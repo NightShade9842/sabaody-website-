@@ -1,3 +1,4 @@
+// api/pokemon-all.js
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
@@ -21,7 +22,7 @@ module.exports = async (req, res) => {
         );
         return res.json(rows);
     } catch (err) {
-        console.error('Pokemon-all API error:', err);
-        return res.json([]);
+        console.error('Pokemon-all error:', err);
+        return res.status(500).json({ error: 'Database error', message: err.message, code: err.code });
     }
 };
