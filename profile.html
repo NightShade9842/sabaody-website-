@@ -6,7 +6,6 @@
     <title>Pirate Profile | SABAODY BOT</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* fallback if style.css missing */
         :root {
             --bg: #0a0e14; --surface: #141b22; --surface2: #1c2530;
             --gold: #f0b90b; --text: #e6edf3; --text2: #8b949e;
@@ -18,9 +17,9 @@
         nav ul { list-style:none; display:flex; gap:1.5rem; }
         nav a { color:var(--text); text-decoration:none; }
         .container { max-width:1400px; margin:0 auto; padding:2rem; }
-        .search-box { width:100%; padding:0.8rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); margin-bottom:1.5rem; }
+        .search-box { width:100%; padding:0.8rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); margin-bottom:1rem; }
         .btn { padding:0.8rem 2rem; background:var(--gold); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
-        .profile-header { display:flex; gap:2rem; align-items:center; background:var(--surface); padding:2rem; border-radius:10px; }
+        .profile-header { display:flex; gap:2rem; align-items:center; background:var(--surface); padding:2rem; border-radius:10px; margin-bottom:2rem; }
         .avatar { width:100px; height:100px; border-radius:50%; border:3px solid var(--gold); }
         .stats-row { display:flex; gap:1.5rem; flex-wrap:wrap; }
         .stat-box { background:var(--surface2); padding:1rem; border-radius:8px; text-align:center; min-width:80px; }
@@ -43,6 +42,8 @@
         .rarity-tx { background:#3d1f1f; color:#f87171; }
         .pokemon-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem; text-align:center; }
         .pokemon-card img { width:100px; height:100px; }
+        .register-form { background:var(--surface); padding:2rem; border-radius:10px; margin-top:1rem; }
+        .register-form input { width:100%; padding:0.8rem; margin-bottom:0.8rem; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); }
     </style>
 </head>
 <body>
@@ -62,10 +63,9 @@
         <div style="max-width:600px; margin:0 auto;">
             <input type="text" class="search-box" id="userIdInput" placeholder="Enter WhatsApp number (e.g., 233560806367)">
             <button class="btn" onclick="loadProfile()">🔍 View Profile</button>
+            <div id="registerSection"></div>
         </div>
-        <div id="profileContent" style="margin-top:2rem;">
-            <p style="color:var(--text2); text-align:center;">Enter your WhatsApp number to see your profile.</p>
-        </div>
+        <div id="profileContent" style="margin-top:2rem;"></div>
     </div>
 
     <script>
@@ -112,17 +112,32 @@
             content.innerHTML = '<div style="text-align:center;padding:2rem;">Loading...</div>';
 
             try {
-                const [profile, cards, pokemon, inventory, guild] = await Promise.all([
-                    fetch(`${API}/profile?id=${encodeURIComponent(userId)}`).then(r => r.json()),
+                const res = await fetch(`${API}/profile?id=${encodeURIComponent(userId)}`);
+                const profile = await res.json();
+
+                if (res.status === 404 || profile.error) {
+                    // User not found – show registration form
+                    content.innerHTML = '';
+                    document.getElementById('registerSection').innerHTML = `
+                        <div class="register-form">
+                            <h3>⚓ Register New Pirate</h3>
+                            <p style="color:var(--text2);">This number is not registered yet. Choose a pirate name below.</p>
+                            <input type="text" id="pirateNameInput" placeholder="Enter pirate name (e.g., Gol D. Shade)">
+                            <button class="btn" onclick="registerUser()">🏴‍☠️ Register</button>
+                            <p id="registerMsg" style="margin-top:0.5rem;"></p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // User exists – load full profile
+                document.getElementById('registerSection').innerHTML = '';
+                const [cards, pokemon, inventory, guild] = await Promise.all([
                     fetch(`${API}/cards?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
                     fetch(`${API}/pokemon?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
                     fetch(`${API}/inventory?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
                     fetch(`${API}/guild?user=${encodeURIComponent(userId)}`).then(r => r.json())
                 ]);
-
-                if (profile.error) {
-                    return content.innerHTML = `<p style="color:var(--danger); text-align:center;">${profile.error}</p>`;
-                }
 
                 const decks = { 1: [], 2: [], 3: [], collection: [] };
                 cards.forEach(c => {
@@ -173,6 +188,36 @@
                 `;
             } catch (e) {
                 content.innerHTML = `<p style="color:var(--danger); text-align:center;">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function registerUser() {
+            const raw = document.getElementById('userIdInput').value;
+            const userId = getUserId(raw);
+            const pirateName = document.getElementById('pirateNameInput').value.trim();
+            const msg = document.getElementById('registerMsg');
+
+            if (!userId || !pirateName) {
+                msg.innerHTML = '<span style="color:var(--danger);">Please fill in both fields.</span>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, pirateName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.innerHTML = '<span style="color:var(--gold);">✅ Registration successful! Loading profile...</span>';
+                    // Reload profile after a short delay
+                    setTimeout(loadProfile, 1500);
+                } else {
+                    msg.innerHTML = `<span style="color:var(--danger);">${data.message || data.error}</span>`;
+                }
+            } catch (e) {
+                msg.innerHTML = '<span style="color:var(--danger);">Registration failed. Try again.</span>';
             }
         }
 
