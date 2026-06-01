@@ -1,41 +1,35 @@
-async function loadMarket() {
-    const listings = await fetch(`${API}/marketplace`).then(r => r.json());
-    const grid = document.getElementById('marketListings');
-    if (!listings.length) {
-        grid.innerHTML = '<p style="color:var(--text2);">No cards for sale.</p>';
+async function loadStore() {
+    const items = await fetch(`${API}/store`).then(r => r.json());
+    const grid = document.getElementById('storeItems');
+    if (!items.length) {
+        grid.innerHTML = '<p style="color:var(--text2);">Store empty.</p>';
         return;
     }
 
-    grid.innerHTML = listings.map(l => {
-        const timeLeft = l.expires_at ? Math.max(0, Math.ceil((new Date(l.expires_at) - Date.now()) / 3600000)) + 'h' : '?';
+    const icons = { potion: '🧪', rare_candy: '🍬', fusion_stone: '💎', evolution_stone: '🔄', pack: '📦', beli_pack: '💰' };
+    grid.innerHTML = items.map(i => {
+        const price = i.price_gems ? `${i.price_gems}💎` : `${i.price_beli?.toLocaleString()}฿`;
         return `
-        <div class="card">
-            <img src="${l.image_url || getAvatarUrl(l.card_name, 256)}" onerror="this.src='${getAvatarUrl(l.card_name, 256)}'">
-            <div class="card-body">
-                <div class="card-title">${l.card_name}</div>
-                <span class="card-rarity rarity-t${l.rarity?.replace('t','')}">${l.rarity?.toUpperCase()}</span>
-                <div class="card-stats">
-                    <span>💰 ${formatNumber(l.price)}฿</span>
-                    <span>⏳ ${timeLeft}</span>
-                </div>
-                <div style="font-size:0.75rem; color:var(--text2);">Seller: ${l.seller_name}</div>
-                <button class="btn" style="margin-top:0.5rem;" onclick="buyCard(${l.id})">🛒 Buy</button>
-            </div>
+        <div class="card" style="text-align:center; padding:1.5rem;">
+            <div style="font-size:3rem; margin-bottom:0.5rem;">${icons[i.item_type] || '📦'}</div>
+            <div class="card-title">${i.name}</div>
+            <p style="font-size:0.85rem;color:var(--text2);">${i.description}</p>
+            <div style="font-weight:bold;color:var(--gold);margin:0.5rem 0;">${price}</div>
+            <button class="btn" onclick="buyItem(${i.id})">🛒 Buy</button>
         </div>`;
     }).join('');
 }
 
-async function buyCard(listingId) {
+async function buyItem(itemId) {
     const userId = getSavedUserId();
     if (!userId) return alert('Please login first');
     const res = await fetch(`${API}/purchase`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, type: 'card', id: listingId })
+        body: JSON.stringify({ userId, type: 'item', id: itemId })
     });
     const data = await res.json();
     alert(data.message || data.error);
-    loadMarket();
 }
 
-loadMarket();
+loadStore();
