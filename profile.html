@@ -4,95 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pirate Profile | SABAODY BOT</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <nav>
-        <div class="logo">⚓ SABAODY BOT</div>
+        <div class="logo">⚓ SABAODY BOT<span>Grand Fleet</span></div>
         <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="profile.html" class="active">Profile</a></li>
-            <li><a href="cards.html">Cards</a></li>
-            <li><a href="store.html">Store</a></li>
-            <li><a href="leaderboard.html">Leaderboard</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/profile.html" class="active">Profile</a></li>
+            <li><a href="/cards.html">Cards</a></li>
+            <li><a href="/marketplace.html">Market</a></li>
+            <li><a href="/store.html">Store</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
         </ul>
     </nav>
 
-    <main class="profile-container">
-        <div class="profile-header" id="profileHeader">
-            <div class="pirate-avatar">
-                <img id="profilePic" src="default-avatar.png" alt="Pirate">
-            </div>
-            <div class="pirate-info">
-                <h1 id="pirateName">Loading...</h1>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <span class="stat-label">Level</span>
-                        <span class="stat-value" id="level">--</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Beli</span>
-                        <span class="stat-value" id="beli">--</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Gems</span>
-                        <span class="stat-value" id="gems">--</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Gold Coins</span>
-                        <span class="stat-value" id="goldCoins">--</span>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        <div style="max-width:600px; margin:0 auto;">
+            <input type="text" class="search-box" id="userIdInput" placeholder="Enter WhatsApp number (e.g., 233560806367) to login/view profile">
+            <button class="btn" onclick="loadProfile()" style="margin-bottom:1.5rem;">🔍 View Profile</button>
         </div>
-
-        <div class="profile-tabs">
-            <button class="tab-btn active" onclick="showTab('cards')">🃏 Cards</button>
-            <button class="tab-btn" onclick="showTab('pokemon')">🐾 Pokémon</button>
-            <button class="tab-btn" onclick="showTab('guild')">⚔️ Guild</button>
-            <button class="tab-btn" onclick="showTab('inventory')">🎒 Inventory</button>
+        <div id="profileContent">
+            <p style="color: var(--text2); text-align:center;">Enter your WhatsApp number above to see your profile.</p>
         </div>
+    </div>
 
-        <div class="tab-content" id="cardsTab">
-            <h2>Card Collection</h2>
-            <div class="deck-section">
-                <h3>Deck 1</h3>
-                <div class="card-grid" id="deck1Grid"></div>
-            </div>
-            <div class="deck-section">
-                <h3>Deck 2</h3>
-                <div class="card-grid" id="deck2Grid"></div>
-            </div>
-            <div class="deck-section" id="deck3Section" style="display:none;">
-                <h3>⭐ Deck 3 (Premium)</h3>
-                <div class="card-grid" id="deck3Grid"></div>
-            </div>
-            <div class="deck-section">
-                <h3>Collection</h3>
-                <div class="card-grid" id="collectionGrid"></div>
-            </div>
-        </div>
-
-        <div class="tab-content" id="pokemonTab" style="display:none;">
-            <h2>Pokémon Party</h2>
-            <div class="pokemon-party" id="pokemonParty"></div>
-            <h3>All Pokémon</h3>
-            <div class="pokemon-grid" id="allPokemon"></div>
-        </div>
-
-        <div class="tab-content" id="guildTab" style="display:none;">
-            <div id="guildInfo">
-                <h2>Guild</h2>
-                <p id="noGuild">Not in a guild</p>
-            </div>
-        </div>
-
-        <div class="tab-content" id="inventoryTab" style="display:none;">
-            <h2>Inventory</h2>
-            <div class="inventory-grid" id="inventoryItems"></div>
-        </div>
-    </main>
-
+    <script src="js/main.js"></script>
     <script src="js/profile.js"></script>
 </body>
 </html>
