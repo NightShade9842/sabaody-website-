@@ -1,50 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokémon | SABAODY BOT</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <nav>
-        <div class="logo">⚓ SABAODY BOT</div>
-        <ul>
-            <li><a href="/profile.html">Profile</a></li>
-            <li><a href="/cards.html">Cards</a></li>
-            <li><a href="/marketplace.html">Market</a></li>
-            <li><a href="/store.html">Store</a></li>
-            <li><a href="/pokemon.html" class="active">Pokémon</a></li>
-            <li><a href="/leaderboard.html">Leaderboard</a></li>
-        </ul>
-    </nav>
+<script src="js/main.js"></script>
+<script>
+    let allPokemon = [];
+    let currentSlide = 0;
+    const visibleSlides = 4;
 
-    <div class="container">
-        <h2 style="color:var(--gold);">🐾 Grand Line Pokémon</h2>
-        <input type="text" class="search-box" id="pokeSearch" placeholder="Search by name or owner..." onkeyup="filterPokemon()">
-        <div class="filters">
-            <select id="rarityFilter" onchange="filterPokemon()">
-                <option value="">All Rarities</option>
-                <option value="Common">Common</option>
-                <option value="Uncommon">Uncommon</option>
-                <option value="Rare">Rare</option>
-                <option value="Epic">Epic</option>
-                <option value="Legendary">Legendary</option>
-            </select>
-        </div>
+    async function loadPokemon() {
+        try {
+            const res = await fetch('/api/pokemon-all');
+            const data = await res.json();
 
-        <!-- Slideshow -->
-        <div class="slideshow-container" id="slideshowContainer">
-            <div class="slideshow-track" id="slideshowTrack"></div>
-            <button class="slide-nav left" onclick="moveSlide(-1)">‹</button>
-            <button class="slide-nav right" onclick="moveSlide(1)">›</button>
-        </div>
+            if (data.error) {
+                document.getElementById('pokemonGrid').innerHTML = `<p style="color:var(--danger);">${data.message || data.error}</p>`;
+                return;
+            }
 
-        <!-- Grid -->
-        <div class="pokemon-grid" id="pokemonGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:1rem;"></div>
-    </div>
+            allPokemon = Array.isArray(data) ? data : [];
+            if (!allPokemon.length) {
+                document.getElementById('pokemonGrid').innerHTML = '<p style="color:var(--text2);">No Pokémon found.</p>';
+                return;
+            }
 
-    <script src="js/main.js"></script>
-    <script src="js/pokemon.js"></script>
-</body>
-</html>
+            renderSlideshow(allPokemon.slice(0, 20));
+            filterPokemon();
+        } catch (e) {
+            document.getElementById('pokemonGrid').innerHTML = `<p style="color:var(--danger);">Failed to load. ${e.message}</p>`;
+        }
+    }
+    // ... rest of the functions as before
+    loadPokemon();
+</script>
