@@ -4,62 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Card Database | SABAODY BOT</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/cards.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <nav>
-        <div class="logo">⚓ SABAODY BOT</div>
+        <div class="logo">⚓ SABAODY BOT<span>Grand Fleet</span></div>
         <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="profile.html">Profile</a></li>
-            <li><a href="cards.html" class="active">Cards</a></li>
-            <li><a href="store.html">Store</a></li>
-            <li><a href="leaderboard.html">Leaderboard</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/profile.html">Profile</a></li>
+            <li><a href="/cards.html" class="active">Cards</a></li>
+            <li><a href="/marketplace.html">Market</a></li>
+            <li><a href="/store.html">Store</a></li>
+            <li><a href="/leaderboard.html">Leaderboard</a></li>
         </ul>
     </nav>
 
-    <main class="cards-browser">
+    <div class="container">
+        <h2 style="color: var(--gold); margin-bottom:1rem;">🃏 Card Database</h2>
+        <input type="text" class="search-box" id="searchInput" placeholder="🔍 Search by card name..." onkeyup="filterCards()">
         <div class="filters">
-            <h2>🃏 Card Database</h2>
-            <div class="filter-controls">
-                <select id="rarityFilter" onchange="filterCards()">
-                    <option value="">All Rarities</option>
-                    <option value="Common">Common</option>
-                    <option value="Uncommon">Uncommon</option>
-                    <option value="Rare">Rare</option>
-                    <option value="Epic">Epic</option>
-                    <option value="Legendary">Legendary</option>
-                    <option value="Mythic">Mythic</option>
-                </select>
-                
-                <select id="sourceFilter" onchange="filterCards()">
-                    <option value="">All Sources</option>
-                    <option value="mazoku">Mazoku</option>
-                    <option value="shoob">Shoob</option>
-                    <option value="karuta">Karuta</option>
-                </select>
-                
-                <select id="sortBy" onchange="filterCards()">
-                    <option value="name">Sort by Name</option>
-                    <option value="rarity">Sort by Rarity</option>
-                    <option value="attack">Sort by Attack</option>
-                    <option value="defense">Sort by Defense</option>
-                </select>
-                
-                <input type="text" id="searchInput" placeholder="Search cards..." onkeyup="filterCards()">
-            </div>
+            <select id="rarityFilter" onchange="filterCards()">
+                <option value="">All Tiers</option>
+                <option value="t1">T1 (Common)</option>
+                <option value="t2">T2 (Uncommon)</option>
+                <option value="t3">T3 (Rare)</option>
+                <option value="t4">T4 (Epic)</option>
+                <option value="t5">T5 (Legendary)</option>
+                <option value="t6">T6 (Mythic)</option>
+                <option value="tx">TX (Special)</option>
+            </select>
+            <select id="sortBy" onchange="filterCards()">
+                <option value="name">Name A-Z</option>
+                <option value="attack">Highest ATK</option>
+                <option value="defense">Highest DEF</option>
+            </select>
         </div>
-        
-        <div class="cards-container" id="cardsContainer">
-            <!-- Dynamically loaded -->
+        <div class="card-grid" id="cardsContainer">
+            <div class="loading"><div class="spinner"></div>Loading cards...</div>
         </div>
-        
-        <div class="pagination" id="pagination">
-            <!-- Page controls -->
-        </div>
-    </main>
+    </div>
 
+    <script src="js/main.js"></script>
     <script src="js/cards.js"></script>
 </body>
 </html>
