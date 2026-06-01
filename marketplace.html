@@ -50,7 +50,6 @@
                 }).join('');
             } catch (e) {
                 document.getElementById('marketListings').innerHTML = `<p style="color:var(--danger);">Failed to load market. ${e.message}</p>`;
-                console.error(e);
             }
         }
 
