@@ -25,6 +25,49 @@
     </div>
 
     <script src="js/main.js"></script>
-    <script src="js/store.js"></script>
+    <script>
+        // Inline store script – guaranteed to run
+        async function loadStore() {
+            try {
+                const items = await fetch('/api/store').then(r => r.json());
+                const grid = document.getElementById('storeItems');
+                if (!items.length) {
+                    grid.innerHTML = '<p style="color:var(--text2);">Store is empty.</p>';
+                    return;
+                }
+                const icons = { potion: '🧪', rare_candy: '🍬', fusion_stone: '💎', evolution_stone: '🔄', pack: '📦', beli_pack: '💰' };
+                grid.innerHTML = items.map(i => {
+                    const price = i.price_gems ? `${i.price_gems}💎` : `${i.price_beli?.toLocaleString()}฿`;
+                    return `
+                    <div class="card" style="text-align:center; padding:1.5rem;">
+                        <div style="font-size:3rem;">${icons[i.item_type] || '📦'}</div>
+                        <div class="card-title">${i.name}</div>
+                        <p style="font-size:0.85rem;color:var(--text2);">${i.description}</p>
+                        <div style="font-weight:bold;color:var(--gold);">${price}</div>
+                        <button class="btn" onclick="buyItem(${i.id})">🛒 Buy</button>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                document.getElementById('storeItems').innerHTML = `<p style="color:var(--danger);">Failed to load store. ${e.message}</p>`;
+                console.error(e);
+            }
+        }
+
+        async function buyItem(itemId) {
+            const userId = getSavedUserId();
+            if (!userId) return alert('Please login first (Profile page)');
+            try {
+                const res = await fetch('/api/purchase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, type: 'item', id: itemId })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+            } catch (e) { alert('Purchase failed'); }
+        }
+
+        loadStore();
+    </script>
 </body>
 </html>
