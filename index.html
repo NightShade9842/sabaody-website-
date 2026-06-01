@@ -7,15 +7,27 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="login-box">
+    <div class="login-box" id="loginBox">
         <h1>⚓ SABAODY BOT</h1>
         <p>Enter your WhatsApp number to continue</p>
         <input type="text" id="phoneInput" placeholder="e.g. 233560806367">
         <button class="btn" onclick="login()">🚀 Enter Grand Line</button>
         <div id="errorMsg" style="margin-top:1rem; color:var(--danger);"></div>
     </div>
+
+    <div class="login-box" id="registerBox" style="display:none;">
+        <h1>⚓ New Pirate</h1>
+        <p>This number is not registered yet. Choose your pirate name below.</p>
+        <input type="text" id="regNameInput" placeholder="Pirate name (e.g. Gol D. Shade)">
+        <button class="btn" onclick="registerAndLogin()">🏴‍☠️ Register & Enter</button>
+        <button class="btn btn-secondary" style="margin-top:0.5rem;" onclick="backToLogin()">⬅ Back to Login</button>
+        <div id="regErrorMsg" style="margin-top:1rem; color:var(--danger);"></div>
+    </div>
+
     <script src="js/main.js"></script>
     <script>
+        let currentUserId = null;
+
         async function login() {
             const raw = document.getElementById('phoneInput').value;
             const userId = getUserId(raw);
@@ -27,14 +39,47 @@
                 const res = await fetch(`/api/profile?id=${encodeURIComponent(userId)}`);
                 const data = await res.json();
                 if (res.status === 404 || data.error) {
-                    document.getElementById('errorMsg').textContent = 'Number not registered. Use the bot to register first (.register <name>)';
+                    // Show registration form
+                    currentUserId = userId;
+                    document.getElementById('loginBox').style.display = 'none';
+                    document.getElementById('registerBox').style.display = 'block';
                     return;
                 }
-                localStorage.setItem('sabaody_user', userId);
+                // Login successful
+                saveUserId(userId);
                 window.location.href = '/profile.html';
             } catch (e) {
                 document.getElementById('errorMsg').textContent = 'Connection error. Try again.';
             }
+        }
+
+        async function registerAndLogin() {
+            const pirateName = document.getElementById('regNameInput').value.trim();
+            if (!pirateName) {
+                document.getElementById('regErrorMsg').textContent = 'Please enter a pirate name.';
+                return;
+            }
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId, pirateName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    saveUserId(currentUserId);
+                    window.location.href = '/profile.html';
+                } else {
+                    document.getElementById('regErrorMsg').textContent = data.message || data.error;
+                }
+            } catch (e) {
+                document.getElementById('regErrorMsg').textContent = 'Registration failed. Try again.';
+            }
+        }
+
+        function backToLogin() {
+            document.getElementById('registerBox').style.display = 'none';
+            document.getElementById('loginBox').style.display = 'block';
         }
     </script>
 </body>
