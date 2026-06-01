@@ -1,3 +1,4 @@
+// api/profile.js
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
@@ -16,9 +17,22 @@ module.exports = async (req, res) => {
     if (!id) return res.status(400).json({ error: 'Missing ?id= parameter' });
 
     try {
-        const [rows] = await pool.execute('SELECT * FROM players WHERE user_id = ?', [id]);
-        if (!rows.length) return res.status(404).json({ error: 'User not found' });
-        return res.json(rows[0]);
+        // 1. Exact match (what the frontend sends: 233560806367@s.whatsapp.net)
+        let [rows] = await pool.execute('SELECT * FROM players WHERE user_id = ?', [id]);
+        if (rows.length) return res.json(rows[0]);
+
+        // 2. Try @lid variant (replace @s.whatsapp.net → @lid)
+        const lidId = id.replace('@s.whatsapp.net', '@lid');
+        [rows] = await pool.execute('SELECT * FROM players WHERE user_id = ?', [lidId]);
+        if (rows.length) return res.json(rows[0]);
+
+        // 3. Try just the plain number (sometimes the bot stores without domain)
+        const plainNumber = id.split('@')[0];
+        [rows] = await pool.execute('SELECT * FROM players WHERE user_id LIKE ?', [`${plainNumber}%`]);
+        if (rows.length) return res.json(rows[0]);
+
+        // 4. Nothing found
+        return res.status(404).json({ error: 'User not found' });
     } catch (err) {
         console.error('Profile API error:', err);
         return res.status(500).json({ error: 'Database error', message: err.message });
