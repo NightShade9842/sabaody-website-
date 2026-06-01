@@ -1,158 +1,112 @@
-// Get user ID from URL parameter
-const urlParams = new URLSearchParams(window.location.search);
-const userId = urlParams.get('id') || 'demo_user';
+const profileUserId = getSavedUserId();
+if (profileUserId) {
+    document.getElementById('userIdInput').value = profileUserId.replace('@s.whatsapp.net', '');
+    loadProfile();
+}
 
-// Fetch profile data
 async function loadProfile() {
+    const raw = document.getElementById('userIdInput').value;
+    const userId = getUserIdFromInput(raw);
+    if (!userId) return alert('Enter a valid WhatsApp number');
+    saveUserIdToStorage(userId);
+
+    const content = document.getElementById('profileContent');
+    content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading profile...</div>';
+
     try {
-        const response = await fetch(`/.netlify/functions/api-profiles?id=${userId}`);
-        const data = await response.json();
-        
-        document.getElementById('pirateName').textContent = data.pirate_name || 'Unknown Pirate';
-        document.getElementById('level').textContent = data.level || 1;
-        document.getElementById('beli').textContent = formatNumber(data.beli || 0);
-        document.getElementById('gems').textContent = data.gems || 0;
-        document.getElementById('goldCoins').textContent = data.gold_coins || 0;
-        
-        if (data.premium_until && new Date(data.premium_until) > new Date()) {
-            document.getElementById('deck3Section').style.display = 'block';
+        const [profile, cards, pokemon, inventory, guild] = await Promise.all([
+            fetch(`${API}/profile?id=${encodeURIComponent(userId)}`).then(r => r.json()),
+            fetch(`${API}/cards?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
+            fetch(`${API}/pokemon?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
+            fetch(`${API}/inventory?owner=${encodeURIComponent(userId)}`).then(r => r.json()),
+            fetch(`${API}/guild?user=${encodeURIComponent(userId)}`).then(r => r.json())
+        ]);
+
+        if (profile.error) {
+            return content.innerHTML = `<p style="color:var(--danger);">${profile.error}. Register in the bot first!</p>`;
         }
-        
-        loadCards();
-        loadPokemon();
-        loadGuild();
-        loadInventory();
-    } catch (error) {
-        console.error('Failed to load profile:', error);
-    }
-}
 
-async function loadCards() {
-    const response = await fetch(`/.netlify/functions/api-cards?userId=${userId}`);
-    const cards = await response.json();
-    
-    const deck1 = cards.filter(c => c.deck_number === 1);
-    const deck2 = cards.filter(c => c.deck_number === 2);
-    const deck3 = cards.filter(c => c.deck_number === 3);
-    const collection = cards.filter(c => !c.deck_number);
-    
-    renderCardGrid('deck1Grid', deck1);
-    renderCardGrid('deck2Grid', deck2);
-    renderCardGrid('deck3Grid', deck3);
-    renderCardGrid('collectionGrid', collection);
-}
+        const decks = {1:[],2:[],3:[],collection:[]};
+        cards.forEach(c => {
+            if (c.deck_number) decks[c.deck_number]?.push(c);
+            else decks.collection.push(c);
+        });
 
-function renderCardGrid(elementId, cards) {
-    const grid = document.getElementById(elementId);
-    grid.innerHTML = cards.map(card => `
-        <div class="card-item" style="border-color: ${getRarityColor(card.rarity)}">
-            <img src="${card.image_url}" alt="${card.card_name}" loading="lazy">
-            <h4>${card.card_name}</h4>
-            <span class="rarity-badge">${card.rarity}</span>
-            <div class="card-stats">
-                <span>ATK: ${card.attack}</span>
-                <span>DEF: ${card.defense}</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function loadPokemon() {
-    const response = await fetch(`/.netlify/functions/api-pokemon?userId=${userId}`);
-    const pokemon = await response.json();
-    
-    const party = pokemon.filter(p => p.party_slot);
-    const all = pokemon.filter(p => !p.party_slot);
-    
-    document.getElementById('pokemonParty').innerHTML = party
-        .sort((a, b) => a.party_slot - b.party_slot)
-        .map(p => `
-            <div class="pokemon-card party-member">
-                <img src="${p.image_url}" alt="${p.pokemon_name}">
-                <h4>${p.pokemon_name}</h4>
-                <p>Lv. ${p.level}</p>
-                <div class="pokemon-stats">
-                    <span>HP: ${p.hp}</span>
-                    <span>ATK: ${p.attack}</span>
-                    <span>DEF: ${p.defense}</span>
-                    <span>SPD: ${p.speed}</span>
+        content.innerHTML = `
+            <div class="profile-header">
+                <img src="${profile.profile_pic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.pirate_name||'Pirate')}&size=200&background=141b22&color=f0b90b`}" 
+                     class="avatar" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=Pirate&size=200&background=141b22&color=f0b90b'">
+                <div>
+                    <h1>${profile.pirate_name || 'Unknown Pirate'}</h1>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="stat-value">${profile.level||1}</div><div class="stat-label">Level</div></div>
+                        <div class="stat-box"><div class="stat-value">${formatNumber(profile.beli)}</div><div class="stat-label">Beli</div></div>
+                        <div class="stat-box"><div class="stat-value">${profile.gems||0}</div><div class="stat-label">Gems</div></div>
+                        <div class="stat-box"><div class="stat-value">${profile.dust||0}</div><div class="stat-label">Dust</div></div>
+                        <div class="stat-box"><div class="stat-value">${cards.length}</div><div class="stat-label">Cards</div></div>
+                        <div class="stat-box"><div class="stat-value">${pokemon.length}</div><div class="stat-label">Pokémon</div></div>
+                    </div>
                 </div>
             </div>
-        `).join('');
-    
-    document.getElementById('allPokemon').innerHTML = all.map(p => `
-        <div class="pokemon-card">
-            <img src="${p.image_url}" alt="${p.pokemon_name}">
-            <h4>${p.pokemon_name}</h4>
-            <p>Lv. ${p.level}</p>
-        </div>
-    `).join('');
-}
-
-async function loadGuild() {
-    const response = await fetch(`/.netlify/functions/api-guild?userId=${userId}`);
-    const guild = await response.json();
-    
-    if (guild && guild.name) {
-        document.getElementById('guildInfo').innerHTML = `
-            <h2>${guild.type === 'marine' ? '⚓' : '🏴‍☠️'} ${guild.name}</h2>
-            <p>${guild.description || 'No description'}</p>
-            <p>Treasury: ${formatNumber(guild.treasury)}฿</p>
-            <p>Members: ${guild.member_count}</p>
-            <p>Leader: ${guild.leader_name}</p>
+            ${guild?.name ? `
+                <div class="stats-row" style="margin-bottom:2rem;">
+                    <div class="stat-box"><div class="stat-value">${guild.name}</div><div class="stat-label">Guild</div></div>
+                    <div class="stat-box"><div class="stat-value">${guild.guild_role||'Member'}</div><div class="stat-label">Role</div></div>
+                    <div class="stat-box"><div class="stat-value">${formatNumber(guild.treasury)}</div><div class="stat-label">Treasury</div></div>
+                </div>
+            `:''}
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('deck1')">🃏 Deck 1 (${decks[1].length})</button>
+                <button class="tab-btn" onclick="showTab('deck2')">🃏 Deck 2 (${decks[2].length})</button>
+                <button class="tab-btn" onclick="showTab('deck3')">⭐ Deck 3 (${decks[3].length})</button>
+                <button class="tab-btn" onclick="showTab('collection')">📦 Collection (${decks.collection.length})</button>
+                <button class="tab-btn" onclick="showTab('pokemon')">🐾 Pokémon (${pokemon.length})</button>
+                <button class="tab-btn" onclick="showTab('inventory')">🎒 Inventory (${inventory.length})</button>
+            </div>
+            <div id="deck1" class="tab-content"><div class="card-grid">${decks[1].map(renderCard).join('')||'<p>No cards</p>'}</div></div>
+            <div id="deck2" class="tab-content" style="display:none;"><div class="card-grid">${decks[2].map(renderCard).join('')||'<p>No cards</p>'}</div></div>
+            <div id="deck3" class="tab-content" style="display:none;"><div class="card-grid">${decks[3].map(renderCard).join('')||'<p>No cards</p>'}</div></div>
+            <div id="collection" class="tab-content" style="display:none;"><div class="card-grid">${decks.collection.map(renderCard).join('')||'<p>Collection empty</p>'}</div></div>
+            <div id="pokemon" class="tab-content" style="display:none;"><div class="card-grid">${pokemon.map(renderPoke).join('')||'<p>No Pokémon</p>'}</div></div>
+            <div id="inventory" class="tab-content" style="display:none;">
+                ${inventory.length ? inventory.map(i => `<div style="background:var(--surface);padding:1rem;border-radius:8px;margin-bottom:0.5rem;">${i.item_name} x${i.quantity}</div>`).join('') : '<p>Empty</p>'}
+            </div>
         `;
+    } catch (e) {
+        content.innerHTML = `<p style="color:var(--danger);">Error: ${e.message}</p>`;
     }
 }
 
-async function loadInventory() {
-    const response = await fetch(`/.netlify/functions/api-inventory?userId=${userId}`);
-    const items = await response.json();
-    
-    document.getElementById('inventoryItems').innerHTML = items.map(item => `
-        <div class="inventory-item">
-            <span class="item-icon">${getItemIcon(item.item_type)}</span>
-            <span class="item-name">${item.item_name}</span>
-            <span class="item-count">x${item.quantity}</span>
+function renderCard(c) {
+    return `<div class="card">
+        <img src="${c.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.card_name)}&size=256&background=141b22&color=f0b90b`}" 
+             onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${c.card_name}') + '&size=256&background=141b22&color=f0b90b'">
+        <div class="card-body">
+            <div class="card-title">${c.card_name}</div>
+            <span class="card-rarity rarity-t${c.rarity?.replace('t','')}">${c.rarity?.toUpperCase()}</span>
+            <div class="card-stats"><span>⚔️ ${c.attack}</span><span>🛡️ ${c.defense}</span></div>
         </div>
-    `).join('');
+    </div>`;
 }
 
-function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(tabName + 'Tab').style.display = 'block';
+function renderPoke(p) {
+    return `<div class="pokemon-card">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${getPokeId(p.pokemon_name)}.png" 
+             onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('${p.pokemon_name}') + '&size=120&background=141b22&color=f0b90b'">
+        <div class="pokemon-name">${p.pokemon_name}</div>
+        <div class="pokemon-level">Lv. ${p.level} | ❤️ ${p.hp}/${p.max_hp}</div>
+    </div>`;
+}
+
+function getPokeId(name) {
+    const dex = {Pikachu:25,Charmander:4,Squirtle:7,Bulbasaur:1,Eevee:133,Gyarados:130,Mewtwo:150,Mew:151};
+    return dex[name] || 1;
+}
+
+function showTab(id) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).style.display = 'block';
     event.target.classList.add('active');
 }
-
-function getRarityColor(rarity) {
-    const colors = {
-        'Common': '#9e9e9e',
-        'Uncommon': '#4caf50',
-        'Rare': '#2196f3',
-        'Epic': '#9c27b0',
-        'Legendary': '#ff9800',
-        'Mythic': '#f44336'
-    };
-    return colors[rarity] || '#9e9e9e';
-}
-
-function getItemIcon(type) {
-    const icons = {
-        'potion': '🧪',
-        'rare_candy': '🍬',
-        'fusion_stone': '💎',
-        'evolution_stone': '🔄',
-        'pack': '📦'
-    };
-    return icons[type] || '📦';
-}
-
-function formatNumber(num) {
-    if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-    return num.toString();
-}
-
-// Load profile on page load
-loadProfile();
