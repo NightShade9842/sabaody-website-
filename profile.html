@@ -4,35 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pirate Profile | SABAODY BOT</title>
-    <link rel="stylesheet" href="style.css">
     <style>
+        /* ===== DARK PIRATE THEME (minimal, rest in style.css) ===== */
         :root {
             --bg: #0a0e14; --surface: #141b22; --surface2: #1c2530;
             --gold: #f0b90b; --text: #e6edf3; --text2: #8b949e;
             --danger: #da3633; --border: #252d38;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin:0; }
-        nav { background: var(--surface); border-bottom:2px solid var(--gold); padding:1rem 2rem; display:flex; justify-content:space-between; }
-        nav .logo { font-size:1.4rem; color:var(--gold); font-weight:bold; }
-        nav ul { list-style:none; display:flex; gap:1.5rem; }
-        nav a { color:var(--text); text-decoration:none; }
-        .container { max-width:1400px; margin:0 auto; padding:2rem; }
-        .search-box { width:100%; padding:0.8rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); margin-bottom:1rem; }
-        .btn { padding:0.8rem 2rem; background:var(--gold); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
-        .profile-header { display:flex; gap:2rem; align-items:center; background:var(--surface); padding:2rem; border-radius:10px; margin-bottom:2rem; }
-        .avatar { width:100px; height:100px; border-radius:50%; border:3px solid var(--gold); }
-        .stats-row { display:flex; gap:1.5rem; flex-wrap:wrap; }
-        .stat-box { background:var(--surface2); padding:1rem; border-radius:8px; text-align:center; min-width:80px; }
-        .stat-value { font-size:1.8rem; color:var(--gold); font-weight:bold; }
-        .tabs { display:flex; gap:0.5rem; margin:2rem 0; }
-        .tab-btn { padding:0.7rem 1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); cursor:pointer; }
-        .tab-btn.active { background:var(--gold); color:#000; font-weight:bold; }
-        .card-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; }
-        .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-        .card img { width:100%; height:200px; object-fit:cover; }
-        .card-body { padding:0.8rem; }
-        .card-title { font-weight:bold; }
-        .card-rarity { display:inline-block; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.75rem; margin:0.3rem 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(ellipse at top, rgba(240,185,11,0.05) 0%, transparent 50%);
+        }
+        nav {
+            background: var(--surface); border-bottom: 2px solid var(--gold);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        nav .logo { font-size: 1.4rem; font-weight: bold; color: var(--gold); }
+        nav ul { list-style: none; display: flex; gap: 1.5rem; }
+        nav a { color: var(--text); text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; }
+        nav a:hover, nav a.active { background: rgba(240,185,11,0.15); color: var(--gold); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .search-box {
+            width: 100%; padding: 0.8rem 1rem; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+            font-size: 1rem; margin-bottom: 1rem;
+        }
+        .btn {
+            display: inline-block; padding: 0.8rem 2rem;
+            background: var(--gold); color: #000; border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer; text-decoration: none;
+        }
+        .profile-header {
+            display: flex; gap: 2rem; align-items: center; background: var(--surface);
+            padding: 2rem; border-radius: 10px; margin-bottom: 2rem; border: 1px solid var(--border);
+        }
+        .avatar {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 3px solid var(--gold); box-shadow: 0 0 20px rgba(240,185,11,0.3);
+        }
+        .stats-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+        .stat-box {
+            background: var(--surface2); padding: 1rem 1.5rem; border-radius: 8px;
+            text-align: center; border: 1px solid var(--border); min-width: 80px;
+        }
+        .stat-value { font-size: 1.8rem; font-weight: bold; color: var(--gold); }
+        .stat-label { font-size: 0.8rem; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+        .tabs { display: flex; gap: 0.5rem; margin: 2rem 0; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 0.7rem 1.5rem; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); cursor: pointer; font-weight: 500;
+        }
+        .tab-btn.active { background: var(--gold); color: #000; font-weight: bold; }
+        .card-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;
+        }
+        .card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid var(--border); }
+        .card-body { padding: 0.8rem; }
+        .card-title { font-weight: bold; margin-bottom: 0.3rem; }
+        .card-rarity {
+            display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
+            font-size: 0.75rem; font-weight: bold; margin-bottom: 0.5rem;
+        }
         .rarity-t1 { background:#4a3728; color:#d4a574; }
         .rarity-t2 { background:#2d3a2d; color:#8fbc8f; }
         .rarity-t3 { background:#1e3a3d; color:#7fdbda; }
@@ -40,21 +81,40 @@
         .rarity-t5 { background:#2a1f3d; color:#c084fc; }
         .rarity-t6 { background:#3d2a1f; color:#fbbf24; }
         .rarity-tx { background:#3d1f1f; color:#f87171; }
-        .pokemon-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem; text-align:center; }
-        .pokemon-card img { width:100px; height:100px; }
-        .register-form { background:var(--surface); padding:2rem; border-radius:10px; margin-top:1rem; }
-        .register-form input { width:100%; padding:0.8rem; margin-bottom:0.8rem; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); }
+        .pokemon-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 1rem; text-align: center;
+        }
+        .pokemon-card img { width: 100px; height: 100px; }
+        .register-form {
+            background: var(--surface); padding: 2rem; border-radius: 10px; margin-top: 1rem;
+            border: 1px solid var(--border);
+        }
+        .register-form input {
+            width: 100%; padding: 0.8rem; margin-bottom: 0.8rem;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text);
+        }
+        .loading {
+            text-align: center; padding: 3rem; color: var(--text2);
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid var(--border);
+            border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <nav>
         <div class="logo">⚓ SABAODY BOT</div>
         <ul>
-            <li><a href="/">Home</a></li>
             <li><a href="/profile.html" class="active">Profile</a></li>
             <li><a href="/cards.html">Cards</a></li>
             <li><a href="/marketplace.html">Market</a></li>
             <li><a href="/store.html">Store</a></li>
+            <li><a href="/pokemon.html">Pokémon</a></li>
             <li><a href="/leaderboard.html">Leaderboard</a></li>
         </ul>
     </nav>
@@ -93,14 +153,19 @@
             return localStorage.getItem('sabaody_user') || '';
         }
 
-        // Auto-load if saved
-        window.onload = function() {
+        // Redirect to login if not authenticated
+        if (!getSavedUserId()) {
+            window.location.href = '/index.html';
+        }
+
+        // Auto-load on page load
+        window.addEventListener('DOMContentLoaded', () => {
             const savedId = getSavedUserId();
             if (savedId) {
                 document.getElementById('userIdInput').value = savedId.replace('@s.whatsapp.net', '');
                 loadProfile();
             }
-        };
+        });
 
         async function loadProfile() {
             const raw = document.getElementById('userIdInput').value;
@@ -109,7 +174,7 @@
             saveUserId(userId);
 
             const content = document.getElementById('profileContent');
-            content.innerHTML = '<div style="text-align:center;padding:2rem;">Loading...</div>';
+            content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading profile...</div>';
 
             try {
                 const res = await fetch(`${API}/profile?id=${encodeURIComponent(userId)}`);
@@ -143,7 +208,6 @@
                 const inventory = await inventoryRes.json();
                 const guild = await guildRes.json();
 
-                // Ensure arrays (in case API returns non-array)
                 const safeCards = Array.isArray(cards) ? cards : [];
                 const safePokemon = Array.isArray(pokemon) ? pokemon : [];
                 const safeInventory = Array.isArray(inventory) ? inventory : [];
