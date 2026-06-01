@@ -30,7 +30,7 @@
 
         async function login() {
             const raw = document.getElementById('phoneInput').value;
-            const userId = getUserId(raw);
+            let userId = getUserId(raw);
             if (!userId) {
                 document.getElementById('errorMsg').textContent = 'Enter a valid WhatsApp number.';
                 return;
@@ -45,8 +45,8 @@
                     document.getElementById('registerBox').style.display = 'block';
                     return;
                 }
-                // Login successful
-                saveUserId(userId);
+                // Login successful – save the actual JID from the database
+                saveUserId(data.user_id);
                 window.location.href = '/profile.html';
             } catch (e) {
                 document.getElementById('errorMsg').textContent = 'Connection error. Try again.';
@@ -67,7 +67,10 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    saveUserId(currentUserId);
+                    // Fetch the profile to get the real user_id
+                    const profileRes = await fetch(`/api/profile?id=${encodeURIComponent(currentUserId)}`);
+                    const profileData = await profileRes.json();
+                    saveUserId(profileData.user_id || currentUserId);
                     window.location.href = '/profile.html';
                 } else {
                     document.getElementById('regErrorMsg').textContent = data.message || data.error;
