@@ -26,7 +26,6 @@
 
     <script src="js/main.js"></script>
     <script>
-        // Inline store script – guaranteed to run
         async function loadStore() {
             try {
                 const items = await fetch('/api/store').then(r => r.json());
@@ -49,7 +48,6 @@
                 }).join('');
             } catch (e) {
                 document.getElementById('storeItems').innerHTML = `<p style="color:var(--danger);">Failed to load store. ${e.message}</p>`;
-                console.error(e);
             }
         }
 
